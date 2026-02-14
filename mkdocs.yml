@@ -1,0 +1,29 @@
+site_name: Anomaly Detection
+site_description: PatchCore-based anomaly detection for industrial quality control
+
+theme:
+  name: material
+  palette:
+    primary: deep orange
+    accent: blue grey
+  features:
+    - navigation.instant
+    - navigation.sections
+    - content.code.copy
+
+nav:
+  - Home: index.md
+  - Installation: installation.md
+  - Usage Guide: usage.md
+  - Architecture: architecture.md
+  - Advanced - Image Acquisition: advanced-acquisition.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - toc:
+      permalink: true
