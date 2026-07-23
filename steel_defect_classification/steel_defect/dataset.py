@@ -66,7 +66,15 @@ def build_file_list(data_dir: Path | str | None = None) -> list[tuple[str, int]]
     # ┌──────────────────────────────────────────────┐
     # │  DATA-1: Write your code below               │
     # └──────────────────────────────────────────────┘
-    raise NotImplementedError("DATA-1: Implement dataset directory scanning")
+    file_list = []
+    for folder in sorted(data_dir.iterdir()):
+        if not folder.is_dir() or folder.name not in CLASS_NAMES:
+            continue
+        label = CLASS_NAMES.index(folder.name)
+        for img_path in sorted(folder.iterdir()):
+            if img_path.suffix.lower() in IMAGE_EXTENSIONS:
+                file_list.append((str(img_path), label))
+    return sorted(file_list)
 
 
 def create_splits(
@@ -106,7 +114,25 @@ def create_splits(
     # ┌──────────────────────────────────────────────┐
     # │  DATA-3: Write your code below               │
     # └──────────────────────────────────────────────┘
-    raise NotImplementedError("DATA-3: Implement train/val/test splitting")
+    from sklearn.model_selection import train_test_split
+
+    labels = [label for _, label in file_list]
+    test_ratio = 1.0 - train_ratio - val_ratio
+
+    # First split: separate out the test set
+    remaining, test_list = train_test_split(
+        file_list, test_size=test_ratio, stratify=labels, random_state=seed,
+    )
+
+    # Second split: separate train and val from the remaining
+    remaining_labels = [label for _, label in remaining]
+    val_ratio_adjusted = val_ratio / (train_ratio + val_ratio)
+    train_list, val_list = train_test_split(
+        remaining, test_size=val_ratio_adjusted,
+        stratify=remaining_labels, random_state=seed,
+    )
+
+    return train_list, val_list, test_list
 
 
 class SteelDataset(Dataset):
@@ -167,7 +193,15 @@ class SteelDataset(Dataset):
         # ┌──────────────────────────────────────────────┐
         # │  DATA-2: Write your code below               │
         # └──────────────────────────────────────────────┘
-        raise NotImplementedError("DATA-2: Implement __getitem__")
+        img_path, label = self.file_list[idx]
+        image = cv2.imread(img_path)
+        if image is None:
+            raise IOError(f"Failed to read image: {img_path}")
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        if self.transform is not None:
+            result = self.transform(image=image)
+            image = result["image"]
+        return image, label
 
 
 # ── Scaffold — DataLoader helper ──────────────────────────────
